@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { ARButton } from 'three/examples/jsm/webxr/ARButton'
 
 let hitTestSource = null;
@@ -43,10 +44,25 @@ function handleHitTest(renderer, frame, onHitTestResultReady, onHitTestResultEmp
       }
 }
 
+function onSelect() {
+    if (planeMarker.visible && pardeuxCoin) {
+        const model = pardeuxCoin.clone();
+  
+        model.position.setFromMatrixPosition(planeMarker.matrix);
+  
+        //model.rotation.y = Math.random() * (Math.PI * 2);
+        model.visible = true;
+  
+        console.log(scene);
+        scene.add(model);
+        console.log(scene);
+    }
+}
+
 function createPlaneMarker() {
     const planeMarkerMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
     
-    const planeMarkerGeometry = new THREE.RingGeometry(0.14, 0.15, 16).rotateX(
+    const planeMarkerGeometry = new THREE.RingGeometry(0.05, 0.06, 32).rotateX(
       -Math.PI / 2,
     );
   
@@ -55,19 +71,18 @@ function createPlaneMarker() {
     planeMarker.matrixAutoUpdate = false;
   
     return planeMarker;
-  };
+};
 
 function createScene(renderer) {
     console.log(renderer);
 
-    const scene = new THREE.Scene();
     const cam = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.02, 200);
 
-    // const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
-    // scene.add(ambientLight)
-    // const light = new THREE.PointLight(0xff0000, 1, 100);
-    // light.position.set(0, 0, 0);
-    // scene.add(light);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
+    scene.add(ambientLight)
+    const light = new THREE.PointLight(0xffffff, 1, 2);
+    light.position.set(0, 0, 0);
+    scene.add(light);
 
     // const boxGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
     // const boxMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff * Math.random() });
@@ -75,14 +90,15 @@ function createScene(renderer) {
     // box.position.z = -3;
 
     // scene.add(box);
-
-    const planeMarker = createPlaneMarker();
+        
+    const controller = renderer.xr.getController(0);
+    scene.add(controller);
+    
     scene.add(planeMarker);
 
-    function render(timestamp, frame) {
-        // box.rotation.y += 0.01;
-        // box.rotation.x += 0.01;
+    controller.addEventListener("select", onSelect);
 
+    function render(timestamp, frame) {
         if(renderer.xr.isPresenting) {            
             if (frame) {
                 handleHitTest(renderer, frame, (hitPoseTransformed) => {
@@ -99,7 +115,6 @@ function createScene(renderer) {
     renderer.setAnimationLoop(render);
 }
 
-
 const { devicePixelRatio, innerHeight, innerWidth } = window;
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(innerWidth, innerHeight);
@@ -108,9 +123,20 @@ renderer.setPixelRatio(devicePixelRatio);
 renderer.xr.enabled = true;
 document.body.appendChild( renderer.domElement );
 
+let pardeuxCoin;
+const gltfLoader = new GLTFLoader();
+
+gltfLoader.load("../assets/par2.gltf", (gltf) => {
+    pardeuxCoin = gltf.scene.children[0];
+    //pardeuxCoin.scale(new THREE.Vector3(0.1, 0.1, 0.1))
+});
+
+const planeMarker = createPlaneMarker();
+
 document.body.appendChild(ARButton.createButton(
     renderer,
     { requiredFeatures: ["hit-test"] },
   ));
 
+const scene = new THREE.Scene();
 createScene(renderer);

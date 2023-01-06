@@ -13,7 +13,7 @@ const sizes = {
 const light = new THREE.AmbientLight(0xffffff, 1);
 scene.add(light);
 
-const geometry = new THREE.BoxGeometry(1, 1, 1);
+const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
 const material = new THREE.MeshStandardMaterial({color: 0xffffff * Math.random()});
 const cube = new THREE.Mesh(geometry, material);
 cube.position.set(0, 0, -2);
